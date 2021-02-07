@@ -2,12 +2,14 @@
 
 // MongrelWiki - Startup.cs
 // 
-// Created by: Alistair J R Young (avatar) at 2021/02/07 2:14 PM.
+// Created by: Alistair J R Young (avatar) at 2021/02/07 4:19 PM.
 
 #endregion
 
 #region using
 
+using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -27,7 +29,20 @@ namespace ArkaneSystems.MongrelWiki
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices (IServiceCollection services)
         {
+            // Configure Windows Authentication.
+            services.AddAuthentication (defaultScheme: NegotiateDefaults.AuthenticationScheme).AddNegotiate ();
+
+            // Use MVC.
             services.AddControllersWithViews ();
+
+            // Set up fallback authorization policy such that an authenticated user is required for every route
+            // not explicitly configured otherwise.
+            services.AddAuthorization (configure: options =>
+                                                  {
+                                                      options.FallbackPolicy = new AuthorizationPolicyBuilder ()
+                                                                              .RequireAuthenticatedUser ()
+                                                                              .Build ();
+                                                  });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -50,6 +65,7 @@ namespace ArkaneSystems.MongrelWiki
 
             app.UseRouting ();
 
+            app.UseAuthentication ();
             app.UseAuthorization ();
 
             app.UseEndpoints (configure: endpoints =>
