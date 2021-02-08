@@ -20,9 +20,23 @@ namespace ArkaneSystems.MongrelWiki.Models
 {
     public class Page
     {
+        public Page ()
+        {
+            this.Slug  = "no-such-page";
+            this.Title = "<no such page>";
+        }
+
+        public Page (string slug, string title, PageType type = PageType.Document)
+        {
+            this.Slug        = slug;
+            this.Title       = title;
+            this.Type        = type;
+            this.LastChanged = DateTime.UtcNow;
+        }
+
         [BsonId]
         [BsonRepresentation (representation: BsonType.ObjectId)]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         [Required (ErrorMessage = "Page slug is required.")]
         public string Slug { get; set; }

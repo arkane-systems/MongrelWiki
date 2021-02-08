@@ -24,8 +24,6 @@ namespace ArkaneSystems.MongrelWiki.Services
 {
     public class WikiService
     {
-        private readonly IMongoDatabase database;
-
         private readonly DatabaseConfiguration settings;
 
         public WikiService (IOptions<DatabaseConfiguration> settings)
@@ -33,30 +31,35 @@ namespace ArkaneSystems.MongrelWiki.Services
             this.settings = settings.Value;
 
             var client = new MongoClient (connectionString: this.settings.ConnectionString);
-            this.database = client.GetDatabase (name: this.settings.DatabaseName);
-            this.pages    = this.database.GetCollection<Page> (name: "pages");
+            this.Database = client.GetDatabase (name: this.settings.DatabaseName);
+            this.Pages    = this.Database.GetCollection<Page> (name: "pages");
         }
+
+        internal IMongoDatabase Database { get; }
 
         #region Page collection
 
-        private readonly IMongoCollection<Page> pages;
+        internal IMongoCollection<Page> Pages { get; }
 
-        public async Task<List<Page>> GetAllPagesAsync () => await this.pages.Find (filter: p => true).ToListAsync ();
+        public async Task<bool> CheckPageExists (string slug)
+            => await this.Pages.CountDocumentsAsync (filter: p => p.Slug == slug) > 0;
+
+        public async Task<List<Page>> GetAllPagesAsync () => await this.Pages.Find (filter: p => true).ToListAsync ();
 
         public async Task<Page> GetPageByIdAsync (string id)
-            => await this.pages.Find (filter: p => p.Id == id).FirstOrDefaultAsync ();
+            => await this.Pages.Find (filter: p => p.Id == id).FirstOrDefaultAsync ();
 
         public async Task<Page> CreatePageAsync (Page page)
         {
-            await this.pages.InsertOneAsync (document: page);
+            await this.Pages.InsertOneAsync (document: page);
 
             return page;
         }
 
         public async Task UpdatePageAsync (string id, Page page)
-            => await this.pages.ReplaceOneAsync (filter: p => p.Id == id, replacement: page);
+            => await this.Pages.ReplaceOneAsync (filter: p => p.Id == id, replacement: page);
 
-        public async Task DeletePageAsync (string id) => await this.pages.DeleteOneAsync (filter: p => p.Id == id);
+        public async Task DeletePageAsync (string id) => await this.Pages.DeleteOneAsync (filter: p => p.Id == id);
 
         #endregion Page collection
     }
