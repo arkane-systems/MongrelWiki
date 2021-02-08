@@ -8,6 +8,9 @@
 
 #region using
 
+using ArkaneSystems.MongrelWiki.Configurations;
+using ArkaneSystems.MongrelWiki.Services;
+
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -29,6 +32,10 @@ namespace ArkaneSystems.MongrelWiki
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices (IServiceCollection services)
         {
+            // Configure MongoDB access.
+            services.Configure<DatabaseConfiguration> (config: this.Configuration.GetSection (key: "Database"));
+            services.AddScoped<WikiService> ();
+
             // Configure Windows Authentication.
             services.AddAuthentication (defaultScheme: NegotiateDefaults.AuthenticationScheme).AddNegotiate ();
 
